@@ -12,7 +12,8 @@ let MASTER_SHEET = "1NwrKVlMeWSyOHZmWzzYpMjNjv-GiMsbaE-lcat0g-FM";
 let MEETING_RECORDS_DIR = "1nAp4NXkFjUiIZOaRLzAZq38dyli3RBa1";
 let MIME_SHEET = "application/vnd.google-apps.spreadsheet";
 let DATE = new Date();
-let DATE_STRING = DATE.getMonth() + 1 + "/" + DATE.getDate() + "/" + DATE.getFullYear();
+let DATE_STRING = DATE.getMonth() + 1 + "/" +
+                  DATE.getDate() + "/" + DATE.getFullYear();
 
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
   if (err) {
@@ -127,56 +128,56 @@ function conductAttendance(auth, daySheetId){
 }
 
 function searchForUserInMasterAndAdd(auth, studentId, daySheetId){
-  let sheets = google.sheets('v4');
-  sheets.spreadsheets.values.append({
+  let sheets = google.sheets('v4').spreadsheets.values;
+  sheets.append({
     auth: auth,
     spreadsheetId: MASTER_SHEET,
     range: 'Sheet1!F1',
     valueInputOption: 'USER_ENTERED',
     insertDataOption: 'OVERWRITE',
     resource: {
-      values: [
-        [ "=query(A:B, \"select A where B = " + studentId + "\")" ]
-      ]
+      values: [ [ "=query(A:B, \"select A where B = " + studentId + "\")" ] ]
     }
   }, function(err, response){
-    sheets.spreadsheets.values.get({
+    sheets.get({
       auth: auth,
       spreadsheetId: MASTER_SHEET,
       range: "Sheet1!F1"
     }, function(err, response){
+      let userId = response.values[0][0];
       if(err) console.error(err);
-      if(response.values[0] == '#N/A' || response.values[0] == '#VALUE!'){
+      else if(userId == '#N/A' || userId == '#VALUE!'){
         console.log('User not found, adding first time user...');
-        clearQueries(auth);
-        addFirstTimeUser(auth, studentId, daySheetId);
+        clearQueries(auth, sheets);
+        addFirstTimeUser(auth, sheets, studentId, daySheetId);
       }
       else{
         console.log('User found, updating attendance information');
-        updateMasterSheetAttendance(auth, response.values[0][0]);
-        addExistingToDaySheet(auth, response.values[0][0], daySheetId);
+        updateMasterSheetAttendance(auth, sheets, userId);
+        addExistingToDaySheet(auth, sheets, userId, daySheetId);
       }
     });
   });
 }
 
-function addExistingToDaySheet(auth, rowNumToRead, daySheetId){
-  let sheets = google.sheets('v4');
-  sheets.spreadsheets.values.get({
+function addExistingToDaySheet(auth, sheets, rowNumToRead, daySheetId){
+  sheets.get({
     auth: auth,
     spreadsheetId: MASTER_SHEET,
     range: "Sheet1!B" + rowNumToRead + ":D" + rowNumToRead
   }, function(err, response){
     if(err) console.error(err);
-    let values = response.values[0];
-    appendInfoToSheet(auth, daySheetId, values);
-    console.log(response.values[0][1] + " " + response.values[0][2] + " was successfully recorded");
-    clearQueries(auth);
-    conductAttendance(auth, daySheetId);
+    else{
+      let values = response.values[0];
+      appendInfoToSheet(auth, sheets, daySheetId, values);
+      console.log(values[1] + " " + values[2] + " was successfully recorded");
+      clearQueries(auth, sheets);
+      conductAttendance(auth, sheets, daySheetId);
+    }
   });
 }
 
-function addFirstTimeUser(auth, studentId, daySheetId){
+function addFirstTimeUser(auth, sheets, studentId, daySheetId){
   let rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -186,14 +187,13 @@ function addFirstTimeUser(auth, studentId, daySheetId){
     rl.question('Enter your last name: ', function(last) {
       rl.close();
       lastName = last;
-      findNextIdAndAppendToSheets(auth, daySheetId, studentId, firstName, lastName);
+      findNextIdAndAppendToSheets(auth, sheets, daySheetId, studentId, firstName, lastName);
     });
   });
 }
 
-function findNextIdAndAppendToSheets(auth, daySheetId, studentId, firstName, lastName){
-  let sheets = google.sheets('v4');
-  sheets.spreadsheets.values.append({
+function findNextIdAndAppendToSheets(auth, sheets, daySheetId, studentId, firstName, lastName){
+  sheets.append({
     auth: auth,
     spreadsheetId: MASTER_SHEET,
     range: 'Sheet1!F1',
@@ -202,32 +202,32 @@ function findNextIdAndAppendToSheets(auth, daySheetId, studentId, firstName, las
     resource: { values: [ [ "=max(A:A)" ] ] }
     }, function(err, response){
       if(err) console.error(err);
-      let values = [ studentId, firstName, lastName ];
-      findNextId(auth, daySheetId, values)
+      else findNextId(auth, sheets, daySheetId, [ studentId, firstName, lastName ]);
     });
 }
 
-function findNextId(auth, daySheetId, values){
-  let sheets = google.sheets('v4');
-  sheets.spreadsheets.values.get({
+function findNextId(auth, sheets, daySheetId, values){
+  sheets.get({
     auth: auth,
     spreadsheetId: MASTER_SHEET,
     range: "Sheet1!F1"
   }, function(err, response){
-    appendInfoToSheet(auth, daySheetId, values);
-    if(typeof response.values == 'undefined') values.unshift( 1 );
-    else values.unshift(parseInt(response.values[0]) + 1);
-    values.push('1');
-    appendInfoToSheet(auth, MASTER_SHEET, values);
-    console.log(values[2] + " " + values[3] + " was successfully recorded");
-    clearQueries(auth);
-    conductAttendance(auth, daySheetId);
+    if(err) console.error(err);
+    else{
+      appendInfoToSheet(auth, sheets, daySheetId, values);
+      if(typeof response.values == 'undefined') values.unshift( 1 );
+      else values.unshift(parseInt(response.values[0]) + 1);
+      values.push('1');
+      appendInfoToSheet(auth, sheets, MASTER_SHEET, values);
+      console.log(values[2] + " " + values[3] + " was successfully recorded");
+      clearQueries(auth, sheets);
+      conductAttendance(auth, sheets, daySheetId);
+    }
   });
 }
 
-function appendInfoToSheet(auth, sheetId, values){
-  let sheets = google.sheets('v4');
-  sheets.spreadsheets.values.append({
+function appendInfoToSheet(auth, sheets, sheetId, values){
+  sheets.append({
     auth: auth,
     spreadsheetId: sheetId,
     range: 'Sheet1!A:A',
@@ -239,29 +239,30 @@ function appendInfoToSheet(auth, sheetId, values){
   });
 }
 
-function updateMasterSheetAttendance(auth, rowNumToUpdate){
-  let sheets = google.sheets('v4');
-  sheets.spreadsheets.values.get({
+function updateMasterSheetAttendance(auth, sheets, rowNumToUpdate){
+  sheets.get({
     auth: auth,
     spreadsheetId: MASTER_SHEET,
     range: "Sheet1!E" + rowNumToUpdate
   }, function(err, response){
-    let values = [ parseInt(response.values[0]) + 1 ];
-    sheets.spreadsheets.values.update({
-      auth: auth,
-      spreadsheetId: MASTER_SHEET,
-      range: "Sheet1!E" + rowNumToUpdate,
-      valueInputOption: 'USER_ENTERED',
-      resource: { values: [ values ] }
-    }, function(err, response){
-      if(err) console.error(err);
-    });
+    if(err) console.error(err);
+    else{
+      let values = [ parseInt(response.values[0]) + 1 ];
+      sheets.update({
+        auth: auth,
+        spreadsheetId: MASTER_SHEET,
+        range: "Sheet1!E" + rowNumToUpdate,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [ values ] }
+      }, function(err, response){
+        if(err) console.error(err);
+      });
+    }
   });
 }
 
-function clearQueries(auth){
-  let sheets = google.sheets('v4');
-  sheets.spreadsheets.values.clear({
+function clearQueries(auth, sheets){
+  sheets.clear({
     auth: auth,
     spreadsheetId: MASTER_SHEET,
     range: 'Sheet1!F:F'
