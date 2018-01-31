@@ -8,7 +8,7 @@ In order to run this you will need access to a Google account which has permissi
 
 Additionally, you will need to run these two commands to install the required Node packages (Also node is required,install [here]()https://www.npmjs.com/get-npm):
 
-```npm install googleapis --save
-npm install google-auth-library@0.* --save```
+```npm install googleapis --save```
+```npm install google-auth-library@0.* --save```
 
 To run this script navigate in a terminal to the directory where ```login.js``` exists and type ```node login.js```.
