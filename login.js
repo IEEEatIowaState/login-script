@@ -144,9 +144,8 @@ function searchForUserInMasterAndAdd(auth, studentId, daySheetId){
       spreadsheetId: MASTER_SHEET,
       range: "Sheet1!F1"
     }, function(err, response){
-      let userId = response.values[0][0];
       if(err) console.error(err);
-      else if(userId == '#N/A' || userId == '#VALUE!'){
+      else if(typeof response == 'undefined' || userId == '#N/A' || userId == '#VALUE!'){
         console.log('User not found, adding first time user...');
         clearQueries(auth, sheets);
         addFirstTimeUser(auth, sheets, studentId, daySheetId);
