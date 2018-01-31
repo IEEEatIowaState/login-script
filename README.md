@@ -13,3 +13,6 @@ Additionally, you will need to run these two commands to install the required No
 ```npm install google-auth-library@0.* --save```
 
 To run this script navigate in a terminal to the directory where ```login.js``` exists and type ```node login.js```.
+
+If you are having trouble copying the URL because you're using the IEEE computer click [here](https://accounts.google.com/o/oauth2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.file&response_type=code&client_id=1061408751875-bj94lt6fu8n120sbv4lsi9gni7mod9dj.apps.googleusercontent.com&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob).
+
