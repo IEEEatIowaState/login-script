@@ -15,13 +15,19 @@ let DATE = new Date();
 let DATE_STRING = DATE.getMonth() + 1 + "/" +
                   DATE.getDate() + "/" + DATE.getFullYear();
 
-fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-  if (err) {
-    console.log('Error loading client secret file: ' + err);
-    return;
-  }
-  authorize(JSON.parse(content), getMeetingSheetId);
-});
+function start(){
+  fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      return;
+    }
+    authorize(JSON.parse(content), getMeetingSheetId);
+  });
+}
+
+function test(){
+  console.log("hello");
+}
 
 function authorize(credentials, callback) {
   let clientSecret = credentials.installed.client_secret;
@@ -173,7 +179,7 @@ function addExistingToDaySheet(auth, sheets, rowNumToRead, daySheetId){
       appendInfoToSheet(auth, sheets, daySheetId, values);
       console.log(values[1] + " " + values[2] + " was successfully recorded");
       clearQueries(auth, sheets);
-      conductAttendance(auth, sheets, daySheetId);
+      conductAttendance(auth, daySheetId);
     }
   });
 }
@@ -222,7 +228,7 @@ function findNextId(auth, sheets, daySheetId, values){
       appendInfoToSheet(auth, sheets, MASTER_SHEET, values);
       console.log(values[2] + " " + values[3] + " was successfully recorded");
       clearQueries(auth, sheets);
-      conductAttendance(auth, sheets, daySheetId);
+      conductAttendance(auth, daySheetId);
     }
   });
 }
