@@ -1,5 +1,7 @@
 ## IEEE Login Script
 
+***This is being rewritten to use AJAX instead of Node. Changes should be completed by 2/14***
+
 This script is used for keeping attendance at ISU chapter IEEE meetings. 
 It was written using NodeJS and uses [Google Sheets API V4](https://developers.google.com/sheets/api/reference/rest/) and [Google Drive API V3](https://developers.google.com/drive/v3/reference/). 
 
