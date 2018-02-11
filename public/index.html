@@ -1,65 +1,237 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html class="no-js" lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
-
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/4.9.1/firebase-app.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/4.9.1/firebase-auth.js"></script>
-    <script defer src="/__/firebase/4.9.1/firebase-database.js"></script>
-    <script defer src="/__/firebase/4.9.1/firebase-messaging.js"></script>
-    <script defer src="/__/firebase/4.9.1/firebase-storage.js"></script>
-    <!-- initialize the SDK after all desired features are loaded -->
-    <script defer src="/__/firebase/init.js"></script>
-
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
-      }
-    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = yes" />
+    <title>IEEE Login Script</title>
   </head>
+
   <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+    <p>Drive API Quickstart</p>
+
+    <button id="authorize-button" style="display: none;">Authorize</button>
+
+    <div id="net-id" style="display: none;">
+      <label for="id_input">NetID: </label>
+      <input id="id_input"></input>
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+    <div id="name" style="display: none;">
+      <label for="first_input">First name: </label>
+      <input id="first_input"></input>
 
-        try {
-          let app = firebase.app();
-          let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-          document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
+      <label for="last_input">Last name: </label>
+      <input id="last_input"></input>
+    </div>
+
+    <pre id="content"></pre>
+
+    <script type="text/javascript">
+      var CLIENT_ID = '1061408751875-k04p5vek2vmh6mdrtbcts0hkstoa65ql.apps.googleusercontent.com';
+      var API_KEY = 'AIzaSyBFniya0gCLNVWGbgypIdvRiMaf5XRknSI';
+      var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+      var SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive';
+      let MASTER_SHEET = "1NwrKVlMeWSyOHZmWzzYpMjNjv-GiMsbaE-lcat0g-FM";
+      let MEETING_RECORDS_DIR = "1nAp4NXkFjUiIZOaRLzAZq38dyli3RBa1";
+      let MIME_SHEET = "application/vnd.google-apps.spreadsheet";
+      let DATE = new Date();
+      let DATE_STRING = DATE.getMonth() + 1 + "/" +
+                        DATE.getDate() + "/" + DATE.getFullYear();
+
+      var authorizeButton = document.getElementById('authorize-button');
+      var netId = document.getElementById('net-id');
+      var name = document.getElementById('name');
+
+      function handleClientLoad() {
+        gapi.load('client:auth2', initClient);
+      }
+
+      function initClient() {
+        gapi.client.init({
+          apiKey: API_KEY,
+          clientId: CLIENT_ID,
+          discoveryDocs: DISCOVERY_DOCS,
+          scope: SCOPES
+        }).then(function () {
+          gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+          updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+          authorizeButton.onclick = handleAuthClick;
+        });
+      }
+
+      function updateSigninStatus(isSignedIn) {
+        if (isSignedIn) {
+          authorizeButton.style.display = 'none';
+          getMeetingSheetId(conductAttendance);
+        } else {
+          authorizeButton.style.display = 'block';
         }
-      });
+      }
+
+      function handleAuthClick(event) {
+        gapi.auth2.getAuthInstance().signIn();
+      }
+
+      function appendPre(message) {
+        var pre = document.getElementById('content');
+        var textContent = document.createTextNode(message + '\n');
+        pre.appendChild(textContent);
+      }
+
+      function getMeetingSheetId(callback){
+        gapi.client.drive.files.list({
+          q: "name = '" + DATE_STRING + "' and '" + MEETING_RECORDS_DIR + "' in parents"
+        }).then(function(response){
+          if(response.result.files.length == 0){
+            console.log('New sheet being created...')
+            createSheetForDay(callback);
+          }
+          else {
+            console.log('Sheet for ' + DATE_STRING + ' with ID ' + response.result.files[0].id + ' found');
+            callback(response.result.files[0].id);
+          }
+        });
+      }
+
+      function createSheetForDay(callback){
+        gapi.client.drive.files.create({
+          resource: {
+            name: DATE_STRING,
+            mimeType: MIME_SHEET,
+            parents: [ MEETING_RECORDS_DIR ]
+          }
+        }).then(function(response){
+          console.log('Created new sheet with ID ' + response.result.files[0].id);
+          callback(file.id);
+        });
+      }
+
+      function conductAttendance(daySheetId){
+        console.log("About to conduct attendance");
+        netId.style.display = 'block';
+        document.body.addEventListener( 'keyup', function (e) {
+          if ( e.keyCode == 13 ) {
+            document.body.removeEventListener('keyup', this);
+            searchForUserInMasterAndAdd(netId.value, daySheetId);
+          }
+        });
+      }
+
+      function searchForUserInMasterAndAdd(studentId, daySheetId){
+        let sheets = gapi.client.sheets.spreadsheets.values;
+        sheets.append({
+          spreadsheetId: MASTER_SHEET,
+          range: 'Sheet1!F1',
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'OVERWRITE',
+          resource: {
+            values: [ [ "=query(A:B, \"select A where B = " + studentId + "\")" ] ]
+          }
+        }, function(response){
+          sheets.get({
+            spreadsheetId: MASTER_SHEET,
+            range: "Sheet1!F1"
+          }, function(response){
+            let userId = '#N/A'
+            if(typeof response.values != 'undefined') userId = response.values[0][0];
+            else if(userId == '#N/A'){
+              console.log('User not found, adding first time user...');
+              clearQueries(sheets);
+              addFirstTimeUser(sheets, studentId, daySheetId);
+            }
+            else{
+              console.log('User found, updating attendance information');
+              updateMasterSheetAttendance(sheets, userId);
+              addExistingToDaySheet(sheets, userId, daySheetId);
+            }
+          });
+        });
+      }
+
+      function addExistingToDaySheet(sheets, rowNumToRead, daySheetId){
+        sheets.get({
+          spreadsheetId: MASTER_SHEET,
+          range: "Sheet1!B" + rowNumToRead + ":D" + rowNumToRead
+        }, function(response){
+          let values = response.values[0];
+          appendInfoToSheet(sheets, daySheetId, values);
+          console.log(values[1] + " " + values[2] + " was successfully recorded");
+          clearQueries(sheets);
+          conductAttendance(daySheetId);
+        });
+      }
+
+      function addFirstTimeUser(sheets, studentId, daySheetId){
+        console.log("User not found");
+        //TODO get first and last name from user, call findNextIdAndAppendToSheets
+      }
+
+      function findNextIdAndAppendToSheets(sheets, daySheetId, studentId, firstName, lastName){
+        sheets.append({
+          spreadsheetId: MASTER_SHEET,
+          range: 'Sheet1!F1',
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'OVERWRITE',
+          resource: { values: [ [ "=max(A:A)" ] ] }
+          }, function(response){
+            findNextId(sheets, daySheetId, [ studentId, firstName, lastName ]);
+          });
+      }
+
+      function findNextId(sheets, daySheetId, values){
+        sheets.get({
+          spreadsheetId: MASTER_SHEET,
+          range: "Sheet1!F1"
+        }, function(response){
+          appendInfoToSheet(sheets, daySheetId, values);
+          if(typeof response.values == 'undefined') values.unshift( 1 );
+          else values.unshift(parseInt(response.values[0]) + 1);
+          values.push('1');
+          appendInfoToSheet(sheets, MASTER_SHEET, values);
+          console.log(values[2] + " " + values[3] + " was successfully recorded");
+          clearQueries(sheets);
+          conductAttendance(daySheetId);
+        });
+      }
+
+      function appendInfoToSheet(sheets, sheetId, values){
+        sheets.append({
+          spreadsheetId: sheetId,
+          range: 'Sheet1!A:A',
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          resource: { values: [ values ] }
+        });
+      }
+
+      function updateMasterSheetAttendance(sheets, rowNumToUpdate){
+        sheets.get({
+          spreadsheetId: MASTER_SHEET,
+          range: "Sheet1!E" + rowNumToUpdate
+        }, function(response){
+          let values = [ parseInt(response.values[0]) + 1 ];
+          sheets.update({
+            spreadsheetId: MASTER_SHEET,
+            range: "Sheet1!E" + rowNumToUpdate,
+            valueInputOption: 'USER_ENTERED',
+            resource: { values: [ values ] }
+          });
+        });
+      }
+
+      function clearQueries(sheets){
+        sheets.clear({
+          spreadsheetId: MASTER_SHEET,
+          range: 'Sheet1!F:F'
+        });
+      }
+
+    </script>
+
+    <script async defer src="https://apis.google.com/js/api.js"
+      onload="this.onload=function(){};handleClientLoad()"
+      onreadystatechange="if (this.readyState === 'complete') this.onload()">
     </script>
   </body>
+
 </html>
