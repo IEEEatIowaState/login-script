@@ -5,16 +5,15 @@ var SCOPES = "https://www.googleapis.com/auth/drive https://www.googleapis.com/a
 let MASTER_SHEET = "1NwrKVlMeWSyOHZmWzzYpMjNjv-GiMsbaE-lcat0g-FM";
 let MEETING_RECORDS_DIR = "1nAp4NXkFjUiIZOaRLzAZq38dyli3RBa1";
 let MIME_SHEET = "application/vnd.google-apps.spreadsheet";
-let SHEETS, DRIVE, NETID, DAY_SHEET;
+let SHEETS, DRIVE, NETID, DAY_SHEET, authorizeButton, netIdField, nameField;
 let DATE = new Date();
 let DATE_STRING = DATE.getMonth() + 1 + "/" +
                   DATE.getDate() + "/" + DATE.getFullYear();
 
-var authorizeButton = document.getElementById('authorize-button');
-var NETIDField = document.getElementById('net-id');
-var nameField = document.getElementById('name-field');
-
 function handleClientLoad() {
+  authorizeButton = document.getElementById('authorize-button');
+  netIdField = document.getElementById('net-id');
+  nameField = document.getElementById('name-field');
   gapi.load('client:auth2', initClient);
 }
 
@@ -79,7 +78,7 @@ function createSheetForDay(callback){
 
 function conductAttendance(){
   id_input.value = "";
-  NETIDField.style.display = 'block';
+  netIdField.style.display = 'block';
   first_input.value = "";
   last_input.value = "";
   nameField.style.display = 'none';
@@ -90,7 +89,7 @@ function handleNETIDEnter(e){
   if ( e.keyCode == 13 ) {
     user_update.innerHTML = "";
     document.body.removeEventListener('keyup', handleNETIDEnter);
-    NETIDField.style.display = 'none';
+    netIdField.style.display = 'none';
     NETID = id_input.value;
     searchForUserInMasterAndAdd();
   }
