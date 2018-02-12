@@ -1,0 +1,34 @@
+body{
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+label, input, p{
+  font-family: 'Lato', sans-serif;
+}
+
+label, input{
+  font-size: 26px;
+}
+
+p{
+  color: #62ad2d;
+  font-size: 18px;
+}
+
+button{
+  display: none;
+}
+
+img{
+  width: 30%;
+}
+
+#name-field{
+  display: none;
+  flex-direction: column;
+}
