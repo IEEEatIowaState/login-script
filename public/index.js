@@ -40,6 +40,7 @@ function updateSigninStatus(isSignedIn) {
     getMeetingSheetId(conductAttendance);
   } else {
     authorizeButton.style.display = 'block';
+    netIdField.style.display = 'none';
   }
 }
 
