@@ -1,14 +1,14 @@
-var CLIENT_ID = '859935142425-ggbvpv3390svn98etcgs7086np5706t7.apps.googleusercontent.com';
-var API_KEY = 'AIzaSyAp4iuya8UGmMlgtJKz000ZA5wjw8R6kyI';
-var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
-var SCOPES = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file";
-let MASTER_SHEET = "1NwrKVlMeWSyOHZmWzzYpMjNjv-GiMsbaE-lcat0g-FM";
-let MEETING_RECORDS_DIR = "1nAp4NXkFjUiIZOaRLzAZq38dyli3RBa1";
-let MIME_SHEET = "application/vnd.google-apps.spreadsheet";
-let SHEETS, DRIVE, NETID, DAY_SHEET, authorizeButton, netIdField, nameField;
-let DATE = new Date();
-let DATE_STRING = DATE.getMonth() + 1 + "/" +
+const CLIENT_ID = '859935142425-ggbvpv3390svn98etcgs7086np5706t7.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyAp4iuya8UGmMlgtJKz000ZA5wjw8R6kyI';
+const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+const SCOPES = "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file";
+const MASTER_SHEET = "1NwrKVlMeWSyOHZmWzzYpMjNjv-GiMsbaE-lcat0g-FM";
+const MEETING_RECORDS_DIR = "1nAp4NXkFjUiIZOaRLzAZq38dyli3RBa1";
+const MIME_SHEET = "application/vnd.google-apps.spreadsheet";
+const DATE = new Date();
+const DATE_STRING = DATE.getMonth() + 1 + "/" +
                   DATE.getDate() + "/" + DATE.getFullYear();
+let SHEETS, DRIVE, NETID, DAY_SHEET, authorizeButton, netIdField, nameField;
 
 function handleClientLoad() {
   authorizeButton = document.getElementById('authorize-button');
@@ -29,6 +29,8 @@ function initClient() {
       updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
     });
     authorizeButton.onclick = handleAuthClick;
+    document.getElementById('net-id-submit').onclick = passNetIdStage;
+    document.getElementById('name-field-submit').onclick = passNameFieldStage;
   });
 }
 
@@ -87,13 +89,15 @@ function conductAttendance(){
 }
 
 function handleNETIDEnter(e){
-  if ( e.keyCode == 13 ) {
-    user_update.innerHTML = "";
-    document.body.removeEventListener('keyup', handleNETIDEnter);
-    netIdField.style.display = 'none';
-    NETID = id_input.value;
-    searchForUserInMasterAndAdd();
-  }
+  if ( e.keyCode == 13 ) passNetIdStage();
+}
+
+function passNetIdStage(){
+  user_update.innerHTML = "";
+  document.body.removeEventListener('keyup', handleNETIDEnter);
+  netIdField.style.display = 'none';
+  NETID = id_input.value;
+  searchForUserInMasterAndAdd();
 }
 
 function searchForUserInMasterAndAdd(){
@@ -117,7 +121,8 @@ function searchForUserInMasterAndAdd(){
       if(userId == '#N/A'){
         console.log('User not found, adding first time user');
         clearQueries();
-        addFirstTimeUser(NETID);
+        nameField.style.display = 'flex';
+        document.body.addEventListener( 'keyup', handleNameEnter);
       }
       else{
         console.log('User found, updating attendance information');
@@ -142,17 +147,14 @@ function addExistingToDaySheet(rowNumToRead){
   });
 }
 
-function addFirstTimeUser(){
-  nameField.style.display = 'flex';
-  document.body.addEventListener( 'keyup', handleNameEnter);
+function handleNameEnter(e){
+  if ( e.keyCode == 13 ) passNameFieldStage();
 }
 
-function handleNameEnter(e){
-  if ( e.keyCode == 13 ) {
-    document.body.removeEventListener('keyup', handleNameEnter);
-    nameField.style.display = 'none';
-    findNextIdAndAppendToSheets(first_input.value, last_input.value);
-  }
+function passNameFieldStage(){
+  document.body.removeEventListener('keyup', handleNameEnter);
+  nameField.style.display = 'none';
+  findNextIdAndAppendToSheets(first_input.value, last_input.value);
 }
 
 function findNextIdAndAppendToSheets(firstName, lastName){

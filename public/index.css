@@ -20,21 +20,30 @@ p{
   font-size: 18px;
 }
 
-button, #name-field, #net-id{
+#authorize-button, #name-field, #net-id{
   display: none;
 }
 
-button{
-  width: 10%;
-  height: 4%;
-  font-size: 18px;
+#name-field, #net-id{
+  flex-direction: column;
+}
+
+#net-id-submit{
+  float: right;
+}
+
+#bottom, #name-field-submit{
+  margin-top: 3%;
+}
+
+#name-field-submit{
+  width: 50%;
+}
+
+#center-inner-content{
+  text-align: center;
 }
 
 img{
   width: 30%;
-}
-
-#name-field{
-  display: none;
-  flex-direction: column;
 }
